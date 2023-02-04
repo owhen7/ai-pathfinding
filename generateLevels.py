@@ -20,22 +20,22 @@ def generateLevelTerrain(currentLevel): #TODO: Rewrite this function according t
     print("TODO: Generate Terrain for each level in this function. Terrain should be indicated with a 1.")
     currentLevel.array = [[1 for x in range(101)] for y in range(101)]
     crawlers = []
-    for hundred in range(100):
+    for twohundred in range(200):  #Adding 200 crawlers
         xValue = randint(0,100)
         yValue = randint(0,100)
-        while Crawler((xValue,yValue)) in crawlers:
+        while Crawler((xValue,yValue)) in crawlers: #Check if starting position is occupied by other crawler
             xValue = randint(0,100)
             yValue = randint(0,100)
         currCrawler = Crawler((xValue,yValue))
         crawlers.append(currCrawler)
-        currentLevel.array[xValue][yValue] = 0
-    while crawlers:
-        crawlerIndex = randint(0,len(crawlers) -1)
-        directions = crawlers[crawlerIndex].getPossibleDirections(currentLevel.array)
+        currentLevel.array[xValue][yValue] = 0 #Set starting position equal to terrain
+    while crawlers: #While there are still crawlers
+        crawlerIndex = randint(0,len(crawlers) -1) #Randomly choose a crawler to move
+        directions = crawlers[crawlerIndex].getPossibleDirections(currentLevel.array) #Check possible directions current crawler can make
         if not directions:
-            crawlers.pop(crawlerIndex)
+            crawlers.pop(crawlerIndex) #If crawler cannot move remove it
         else:
-            randDirection = directions[randint(0, len(directions) - 1)]
+            randDirection = directions[randint(0, len(directions) - 1)] #If crawler can move choose a random direction where it will move
             match randDirection:
                 #North
                 case 0:
@@ -53,10 +53,10 @@ def generateLevelTerrain(currentLevel): #TODO: Rewrite this function according t
                 case 3:
                     crawlers[crawlerIndex].updatePosition((crawlers[crawlerIndex].getXPosition() - 1, crawlers[crawlerIndex].getYPosition()))
                     
-            if currentLevel.array[crawlers[crawlerIndex].getXPosition()][crawlers[crawlerIndex].getYPosition()] == 0:
+            if currentLevel.array[crawlers[crawlerIndex].getXPosition()][crawlers[crawlerIndex].getYPosition()] == 0: #Delete crawler if its moves into another crawler's path
                 crawlers.pop(crawlerIndex)
             else:
-                currentLevel.array[crawlers[crawlerIndex].getXPosition()][crawlers[crawlerIndex].getYPosition()] = 0
+                currentLevel.array[crawlers[crawlerIndex].getXPosition()][crawlers[crawlerIndex].getYPosition()] = 0 #Set crawler's current location to terrain
 
 
 
