@@ -62,7 +62,7 @@ def computePath(currentNode):
         retrace = retrace.parent
     return pathList
 
-def forwardA(maze, start, goal):
+def forwardA(array, start, goal):
 
     startNode = Node(None, start)
     startNode.g = startNode.heuristic = startNode.f = 0
@@ -81,37 +81,28 @@ def forwardA(maze, start, goal):
 
     while len(openList) > 0:
         outer_iterations += 1
-
         if outer_iterations > max_iterations:
             # if we hit this point return the path such as it is
             # it will not contain the destination
             print("giving up on pathfinding too many iterations")
             return computePath(currentNode)       
-        
+    
         #Move node from openList to closedList and begin work.
         currentNode = heapq.heappop(openList)
         closedList.append(currentNode)
-
         #If we found the goal!
         if currentNode.position == goalNode.position:
             return computePath(currentNode)
         
         neighbors = []  
-        for new_position in ((0, -1), (0, 1), (-1, 0), (1, 0)):
-
-            node_position = (currentNode.position[0] + new_position[0], currentNode.position[1] + new_position[1])
+        #Look to the four cardinal directions,
+        for movement in ((0, -1), (0, 1), (-1, 0), (1, 0)): 
+            node_position = (currentNode.position[0] + movement[0], currentNode.position[1] + movement[1])
+            if not (node_position[0] > 100 or node_position[0] < 0 or node_position[1] > 100 or node_position[1] < 0):
+                if array[node_position[0]][node_position[1]] == 0: #if not terrain
+                    newNode = Node(currentNode, node_position)
+                    neighbors.append(newNode)
             
-            #range
-            if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (len(maze[len(maze)-1]) -1) or node_position[1] < 0:
-                continue
-
-            # terrain
-            if maze[node_position[0]][node_position[1]] != 0:
-                continue
-            
-            newNode = Node(currentNode, node_position)
-            neighbors.append(newNode)
-
         for node in neighbors:
             if len([closed_child for closed_child in closedList if closed_child == node]) > 0:
                 continue
