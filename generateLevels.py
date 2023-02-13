@@ -7,7 +7,6 @@ import pickle
 from random import *
 
 def pickle50Levels():
-    print("TODO: This function will Generate 50 levels and then pickle them.")
     with open('levels.pickle', 'wb') as file:
             for x in range(50):
                 print(x)
@@ -57,6 +56,15 @@ def generateLevelTerrain(currentLevel): #TODO: Rewrite this function according t
                 crawlers.pop(crawlerIndex)
             else:
                 currentLevel.array[crawlers[crawlerIndex].getXPosition()][crawlers[crawlerIndex].getYPosition()] = 0 #Set crawler's current location to terrain
+            
+    #Invert the terrain below because the crawlers should be walls instead of tunnels.
+    rows = len(currentLevel.array)
+    columns = len(currentLevel.array[0])
+    for i in range(rows):
+        for j in range(columns):
+            if(i < 7 and j < 7 or i > 95 and j > 95): #Create little squares of guaranteed terrain in the top left and bottom right.
+                currentLevel.array[i][j] = 1; #set it to 1 before its reversed so it becomes a 0.
+            currentLevel.array[i][j] = 1 - currentLevel.array[i][j]
 
 
 

@@ -1,20 +1,20 @@
 class Crawler:
     
-    def __init__(self, position): #Initializes crawler by making its starting position as current position and adding that position to a visited set
+    def __init__(self, position):
         self.position = position
         self.visited = {position}
     
-    def updatePosition(self,newPosition): #Replaced current position with new position and new position to visited set
+    def updatePosition(self,newPosition):
         self.position = newPosition
         self.visited.add(newPosition)
- 
-    def getXPosition(self): #Returns x value of current position in array
+
+    def getXPosition(self):
         return self.position[0]
     
-    def getYPosition(self): #Returns y value of current position in array
+    def getYPosition(self):
         return self.position[1]
     
-    def getPossibleDirections(self,environment): #Returns array of possible directions crawler can move. Crawlers cannot move out of bounds or into spaces that they already visited
+    def getPossibleDirections(self,environment):
         directions = []
         #North Check
         if self.position[1] != 0 and (self.position[0], self.position[1] - 1) not in self.visited:
