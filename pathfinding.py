@@ -2,7 +2,15 @@ import pickle
 from level import Level
 from matplotlib import pyplot as plt
 import heapq
+import time
+import statistics
 
+#TODO: Optimize Forward A to make it run faster.
+#TODO: Write forwardA with different tie breaking
+#TODO: Write 
+
+
+#Breaks ties in favor of nodes with larger G values
 class Node:
 
     def __init__(self, parent=None, position=None):
@@ -13,32 +21,25 @@ class Node:
         self.g = 0
         self.heuristic = 0
 
-
+    #So we can see if nodes are already in the list.
     def __eq__(self, other):
         return self.position == other.position
-    
-    def __repr__(self):
-        return f"{self.position} - g: {self.g} heuristic: {self.heuristic} f: {self.f}"
 
-    # defining less than for purposes of heap queue
+    #for heap queue sorting. Tie breaking too.
     def __lt__(self, other):
+        if(self.f == other.f):
+            return self.g > other.g
         return self.f < other.f
     
-    # defining greater than for purposes of heap queue
+    #for heap queue sorting. Tie breaking too.
     def __gt__(self, other):
+        if(self.f == other.f):
+            return self.g < other.g
         return self.f > other.f
     
-#Courtesy of ChatGPT - can edit this. This would be extra points and isn't currently implemented.
-#It actually would have to be from scratch so it wouldn't even be enough. But we can come back to it.
-class PriorityQueue:
-    def __init__(self):
-        self._queue = []
-        self._index = 0
-    def push(self, item, priority):
-        heapq.heappush(self._queue, (priority, self._index, item))
-        self._index += 1
-    def pop(self):
-        return heapq.heappop(self._queue)[-1]
+
+#Breaks ties in favor of nodes with larger G values.
+#class Node2:
 
 def unpickle50Levels(levels):    
     with open('levels.pickle', 'rb') as file:
@@ -67,27 +68,15 @@ def forwardA(array, start, goal):
     startNode = Node(None, start)
     startNode.g = startNode.heuristic = startNode.f = 0
     goalNode = Node(None, goal)
-    goalNode.g = goalNode.heuristic = goalNode.f = 0
 
+    directions = (0, -1), (0, 1), (-1, 0), (1, 0) #Directions we can move in.
     openList = []
-    closedList = []
-
     heapq.heapify(openList) 
     heapq.heappush(openList, startNode)
+    closedList = []
 
-    outer_iterations = 0
-    max_iterations = (101 * 101)
-    #max_iterations = (101 * 101 // 2)
-
-    while len(openList) > 0:
-        outer_iterations += 1
-        if outer_iterations > max_iterations:
-            # if we hit this point return the path such as it is
-            # it will not contain the destination
-            print("giving up on pathfinding too many iterations")
-            return computePath(currentNode)       
+    while len(openList) > 0:  
     
-        #Move node from openList to closedList and begin work.
         currentNode = heapq.heappop(openList)
         closedList.append(currentNode)
         #If we found the goal!
@@ -95,34 +84,37 @@ def forwardA(array, start, goal):
             return computePath(currentNode)
         
         neighbors = []  
-        #Look to the four cardinal directions,
-        for movement in ((0, -1), (0, 1), (-1, 0), (1, 0)): 
+        for movement in directions: 
             node_position = (currentNode.position[0] + movement[0], currentNode.position[1] + movement[1])
-            if not (node_position[0] > 100 or node_position[0] < 0 or node_position[1] > 100 or node_position[1] < 0):
-                if array[node_position[0]][node_position[1]] == 0: #if not terrain
-                    newNode = Node(currentNode, node_position)
-                    neighbors.append(newNode)
+            if node_position[0] < 101 and node_position[0] > -1 and node_position[1] < 101 and node_position[1] > -1 and array[node_position[0]][node_position[1]] == 0: #if open square
+                newNode = Node(currentNode, node_position)
+                neighbors.append(newNode)
             
         for node in neighbors:
             if len([closed_child for closed_child in closedList if closed_child == node]) > 0:
                 continue
 
             node.g = currentNode.g + 1
-
-            #This manhattan one is correwct and has a better path but its way way slower than the traditional formula.
-            node.heuristic = abs(node.position[0] - goalNode.position[0]) + abs(node.position[1] - goalNode.position[1]) 
+            node.heuristic = abs(node.position[0] - goalNode.position[0]) + abs(node.position[1] - goalNode.position[1]) #manhattan is usually slower in diagonal map.
             #node.heuristic = ((node.position[0] - goalNode.position[0]) ** 2) + ((node.position[1] - goalNode.position[1]) ** 2)
             node.f = node.g + node.heuristic
             
-            # Make sure the node isn't already in the openlist.
-            if len([open_node for open_node in openList if node.position == open_node.position and node.g > open_node.g]) > 0:
-                continue
+            if node in openList: 
+                idx = openList.index(node) 
+                if node.g < openList[idx].g:
+                    # update the node in the open list
+                    openList[idx].g = node.g
+                    openList[idx].f = node.f
+                    openList[idx].h = node.heuristic
+            else:
+                # Add the node to the open list
+                heapq.heappush(openList, node)
 
-            heapq.heappush(openList, node)
-
-    print("There was no path between the two points.")
+    print("No path between start and end seen.")
     return None
 
+#def forwardA(array, start, goal):
+    pass
 def main():
     levels = []
     unpickle50Levels(levels)
@@ -138,13 +130,34 @@ def main():
     goal = (100, 100)
     path = forwardA(currentLevelSelection.array, start, goal)
 
+
+# call the function fifty times and record the time taken for each call
+#     times = []
+#     for i in range(2):
+#         start_time = time.time()
+#         x = loadSpecificLevel(levels, int(levelSelectNum))
+#         path = forwardA(x.array, start, goal)
+#         end_time = time.time()
+#         times.append(end_time - start_time)
+# #12.7111 seconds average
+
+
+#     # calculate the average and standard deviation of the time taken
+#     average_time = statistics.mean(times)
+#     standard_deviation = statistics.stdev(times)
+
+# print the results
+    #print(f"Average time taken: {average_time:.4f} seconds")
+    #print(f"Standard deviation: {standard_deviation:.4f} seconds")
+
     arrayWithPath = currentLevelSelection.array
     if path is not None:
         for i in path:
             x = i[0]
             y = i[1]
-            arrayWithPath[x][y] = 0.5 #Should be a number between 0 and 1 because of the way the plot software chooses colors. Otherwise the colors change.
+            arrayWithPath[x][y] = 0.5
     
+
     displayLevel(currentLevelSelection)
     #print(path)
 
