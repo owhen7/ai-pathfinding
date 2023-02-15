@@ -9,37 +9,64 @@ import statistics
 #TODO: Write forwardA with different tie breaking
 #TODO: Write 
 
+#Node Tiebreak value to check. Can be either 1 or 2
+TIEBREAK = 1
 
-#Breaks ties in favor of nodes with larger G values
-class Node:
+#Breaks ties in favor of nodes with smaller G values
+if TIEBREAK == 1:
+    class Node:
 
-    def __init__(self, parent=None, position=None):
-        self.parent = parent
-        self.position = position
+        def __init__(self, parent=None, position=None):
+            self.parent = parent
+            self.position = position
+            
+            self.f = 0
+            self.g = 0
+            self.heuristic = 0
+
+        #So we can see if nodes are already in the list.
+        def __eq__(self, other):
+            return self.position == other.position
+
+        #for heap queue sorting. Tie breaking too.
+        def __lt__(self, other):
+            if(self.f == other.f):
+                return self.g > other.g
+            return self.f < other.f
         
-        self.f = 0
-        self.g = 0
-        self.heuristic = 0
+        #for heap queue sorting. Tie breaking too.
+        def __gt__(self, other):
+            if(self.f == other.f):
+                return self.g < other.g
+            return self.f > other.f
+        
+#This node breaks ties in favor of nodes with larger G values.
+if TIEBREAK == 2:
+    class Node:
 
-    #So we can see if nodes are already in the list.
-    def __eq__(self, other):
-        return self.position == other.position
+        def __init__(self, parent=None, position=None):
+                self.parent = parent
+                self.position = position
+                
+                self.f = 0
+                self.g = 0
+                self.heuristic = 0
 
-    #for heap queue sorting. Tie breaking too.
-    def __lt__(self, other):
-        if(self.f == other.f):
-            return self.g > other.g
-        return self.f < other.f
-    
-    #for heap queue sorting. Tie breaking too.
-    def __gt__(self, other):
-        if(self.f == other.f):
-            return self.g < other.g
-        return self.f > other.f
-    
+            #So we can see if nodes are already in the list.
+        def __eq__(self, other):
+            return self.position == other.position
 
-#Breaks ties in favor of nodes with larger G values.
-#class Node2:
+            #for heap queue sorting. Tie breaking too.
+        def __lt__(self, other):
+            if(self.f == other.f):
+                return self.g < other.g
+            return self.f < other.f
+            
+        #for heap queue sorting. Tie breaking too.
+        def __gt__(self, other):
+            if(self.f == other.f):
+                return self.g > other.g
+            return self.f > other.f
 
 def unpickle50Levels(levels):    
     with open('levels.pickle', 'rb') as file:
@@ -63,10 +90,10 @@ def computePath(currentNode):
         retrace = retrace.parent
     return pathList
 
-def forwardA(array, start, goal):
+def forwardA(array, start, goal, averageNodes):
 
     startNode = Node(None, start)
-    startNode.g = startNode.heuristic = startNode.f = 0
+    #startNode.g = startNode.heuristic = startNode.f = 0
     goalNode = Node(None, goal)
 
     directions = (0, -1), (0, 1), (-1, 0), (1, 0) #Directions we can move in.
@@ -76,16 +103,17 @@ def forwardA(array, start, goal):
     closedList = []
 
     while len(openList) > 0:  
-    
         currentNode = heapq.heappop(openList)
         closedList.append(currentNode)
+        
         #If we found the goal!
         if currentNode.position == goalNode.position:
+            averageNodes.append(len(closedList))
             return computePath(currentNode)
         
         neighbors = []  
-        for movement in directions: 
-            node_position = (currentNode.position[0] + movement[0], currentNode.position[1] + movement[1])
+        for x in directions: 
+            node_position = (currentNode.position[0] + x[0], currentNode.position[1] + x[1])
             if node_position[0] < 101 and node_position[0] > -1 and node_position[1] < 101 and node_position[1] > -1 and array[node_position[0]][node_position[1]] == 0: #if open square
                 newNode = Node(currentNode, node_position)
                 neighbors.append(newNode)
@@ -111,12 +139,14 @@ def forwardA(array, start, goal):
                 heapq.heappush(openList, node)
 
     print("No path between start and end seen.")
+    averageNodes.append(len(closedList))
     return None
 
-#def forwardA(array, start, goal):
+#def backwardsA(array, start, goal):
     pass
 def main():
     levels = []
+    averageNodes = []
     unpickle50Levels(levels)
     
     levelSelectNum = input("What level from 0-49 should be loaded? ")
@@ -128,38 +158,37 @@ def main():
     #COORDINATES ARE FLIPPED FROM WHAT IT LOOKS LIKE ON THE PLOT DISPLAY. ENTER AS Y,X !!!!!!!!!!!!!!!!!!
     start = (0, 0)
     goal = (100, 100)
-    path = forwardA(currentLevelSelection.array, start, goal)
-
-
-# call the function fifty times and record the time taken for each call
-#     times = []
-#     for i in range(2):
-#         start_time = time.time()
-#         x = loadSpecificLevel(levels, int(levelSelectNum))
-#         path = forwardA(x.array, start, goal)
-#         end_time = time.time()
-#         times.append(end_time - start_time)
-# #12.7111 seconds average
-
-
-#     # calculate the average and standard deviation of the time taken
-#     average_time = statistics.mean(times)
-#     standard_deviation = statistics.stdev(times)
-
-# print the results
-    #print(f"Average time taken: {average_time:.4f} seconds")
-    #print(f"Standard deviation: {standard_deviation:.4f} seconds")
-
-    arrayWithPath = currentLevelSelection.array
-    if path is not None:
-        for i in path:
-            x = i[0]
-            y = i[1]
-            arrayWithPath[x][y] = 0.5
+    #path = forwardA(currentLevelSelection.array, start, goal, averageNodes)
     
+    #level 5:1: closed list was 936
+    #level 5:2: closed list was 1967
+    #level 31 for method 2: 6153
 
-    displayLevel(currentLevelSelection)
-    #print(path)
+    times = []
+    for i in range(50):
+        x = loadSpecificLevel(levels, i)
+        start_time = time.time()
+        path = forwardA(x.array, start, goal,  averageNodes)
+        end_time = time.time()
+        times.append(end_time - start_time)
+
+    average_time = statistics.mean(times)
+    average_nodes = statistics.mean(averageNodes)
+    standard_deviation = statistics.stdev(times)
+    print(f"Average time taken: {average_time:.4f} seconds")
+    print(f"Standard deviation: {standard_deviation:.4f} seconds")
+    print(f"Average amount of nodes visited: {average_nodes:.4f}")
+    
+    # Draw the path onto the array.
+    # arrayWithPath = currentLevelSelection.array
+    # if path is not None:
+    #     for i in path:
+    #         x = i[0]
+    #         y = i[1]
+    #         arrayWithPath[x][y] = 0.5
+    
+    # displayLevel(currentLevelSelection)
+    #print(path) #print out tuples of the path
 
 if __name__ == "__main__":
     main()
