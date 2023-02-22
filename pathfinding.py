@@ -102,7 +102,7 @@ def forwardA(array, start, goal, averageNodes):
                 neighbors.append(newNode)
             
         for node in neighbors:
-            if len([closed_child for closed_child in closedList if closed_child == node]) > 0:
+            if node in closedList:
                 continue
 
             node.g = currentNode.g + 1
@@ -126,56 +126,7 @@ def forwardA(array, start, goal, averageNodes):
     return None
 
 def backwardA(array, start, goal, averageNodes):
-
-    startNode = Node(None, goal)
-    #startNode.g = startNode.heuristic = startNode.f = 0
-    goalNode = Node(None, start)
-
-    directions = (0, -1), (0, 1), (-1, 0), (1, 0) #Directions we can move in.
-    openList = []
-    heapq.heapify(openList) 
-    heapq.heappush(openList, startNode)
-    closedList = []
-
-    while len(openList) > 0:  
-        currentNode = heapq.heappop(openList)
-        closedList.append(currentNode)
-        
-        #If we found the goal!
-        if currentNode.position == goalNode.position:
-            averageNodes.append(len(closedList))
-            return computePath(currentNode)
-        
-        neighbors = []  
-        for x in directions: 
-            node_position = (currentNode.position[0] + x[0], currentNode.position[1] + x[1])
-            if node_position[0] < 101 and node_position[0] > -1 and node_position[1] < 101 and node_position[1] > -1 and array[node_position[0]][node_position[1]] == 0: #if open square
-                newNode = Node(currentNode, node_position)
-                neighbors.append(newNode)
-            
-        for node in neighbors:
-            if len([closed_child for closed_child in closedList if closed_child == node]) > 0: #If it exists.
-                continue
-
-            node.g = currentNode.g + 1
-            node.heuristic = abs(node.position[0] - goalNode.position[0]) + abs(node.position[1] - goalNode.position[1]) #manhattan is usually slower in diagonal map.
-            #node.heuristic = ((node.position[0] - goalNode.position[0]) ** 2) + ((node.position[1] - goalNode.position[1]) ** 2)
-            node.f = node.g + node.heuristic
-            
-            if node in openList: 
-                i = openList.index(node) 
-                if node.g < openList[i].g:
-                    # update the node in the open list
-                    openList[i].g = node.g
-                    openList[i].f = node.f
-                    openList[i].h = node.heuristic
-            else:
-                # Add the node to the open list
-                heapq.heappush(openList, node)
-
-    print("No path between start and end seen.")
-    averageNodes.append(len(closedList))
-    return None
+    return forwardA(array,goal,start,averageNodes)
 
 def adaptiveA(array, start, goal, averageNodes, mode, closedL):
     startNode = Node(None,start)
@@ -209,7 +160,7 @@ def adaptiveA(array, start, goal, averageNodes, mode, closedL):
                 neighbors.append(newNode)
         
         for node in neighbors:
-            if len([closed_child for closed_child in closedList if closed_child == node]) > 0:
+            if node in closedList:
                 continue
             
             if node in closedL:
@@ -238,7 +189,6 @@ def adaptiveA(array, start, goal, averageNodes, mode, closedL):
     averageNodes.append(len(closedList))
     return None
 
-
 def main():
     levels = []
     averageNodes = []
@@ -253,7 +203,7 @@ def main():
     #COORDINATES ARE FLIPPED FROM WHAT IT LOOKS LIKE ON THE PLOT DISPLAY. ENTER AS Y,X !!!!!!!!!!!!!!!!!!
     start = (0, 0)
     goal = (100, 100)
-    #path = forwardA(currentLevelSelection.array, start, goal, averageNodes)
+    path = forwardA(currentLevelSelection.array, start, goal, averageNodes)
     
     #level 5:1: closed list was 936
     #level 5:2: closed list was 1967
@@ -263,17 +213,17 @@ def main():
     for i in range(50):
         x = loadSpecificLevel(levels, i)
         start_time = time.time()
-        path = forwardA(x.array, start, goal,  averageNodes)
+        path = backwardA(x.array, start, goal,  averageNodes)
         end_time = time.time()
         times.append(end_time - start_time)
         
 
-    average_time = statistics.mean(times)
-    average_nodes = statistics.mean(averageNodes)
-    standard_deviation = statistics.stdev(times)
-    print(f"Average time taken: {average_time:.4f} seconds")
-    print(f"Standard deviation: {standard_deviation:.4f} seconds")
-    print(f"Average amount of nodes visited: {average_nodes:.4f}")
+    # average_time = statistics.mean(times)
+    # average_nodes = statistics.mean(averageNodes)
+    # standard_deviation = statistics.stdev(times)
+    # print(f"Average time taken: {average_time:.4f} seconds")
+    # print(f"Standard deviation: {standard_deviation:.4f} seconds")
+    # print(f"Average amount of nodes visited: {average_nodes:.4f}")
     
     
 
@@ -293,16 +243,16 @@ def main():
     print(f"Standard deviation: {standard_deviationA:.4f} seconds")
     print(f"Average amount of nodes visited: {average_nodesA:.4f}")
     
-    # Draw the path onto the array.
-    # arrayWithPath = currentLevelSelection.array
-    # if path is not None:
-    #     for i in path:
-    #         x = i[0]
-    #         y = i[1]
-    #         arrayWithPath[x][y] = 0.5
+    #Draw the path onto the array.
+    arrayWithPath = currentLevelSelection.array
+    if path is not None:
+        for i in path:
+            x = i[0]
+            y = i[1]
+            arrayWithPath[x][y] = 0.5
     
-    # displayLevel(currentLevelSelection)
-    #print(path) #print out tuples of the path
+    displayLevel(currentLevelSelection)
+    # # print(path) #print out tuples of the path
 
 if __name__ == "__main__":
     main()
