@@ -10,7 +10,7 @@ import statistics
 #TODO: Write 
 
 #Node Tiebreak value to check. Can be either 1 or 2
-TIEBREAK = 1
+TIEBREAK = 2
 
 #Breaks ties in favor of nodes with smaller G values
 if TIEBREAK == 1:
@@ -105,7 +105,7 @@ def forwardA(array, start, goal, averageNodes):
     while len(openList) > 0:  
         currentNode = heapq.heappop(openList)
         closedList.append(currentNode)
-        
+
         #If we found the goal!
         if currentNode.position == goalNode.position:
             averageNodes.append(len(closedList))
@@ -144,6 +144,58 @@ def forwardA(array, start, goal, averageNodes):
 
 #def backwardsA(array, start, goal):
     pass
+def backwardA(array, start, goal, averageNodes):
+
+    startNode = Node(None, goal)
+    #startNode.g = startNode.heuristic = startNode.f = 0
+    goalNode = Node(None, start)
+
+    directions = (0, -1), (0, 1), (-1, 0), (1, 0) #Directions we can move in.
+    openList = []
+    heapq.heapify(openList) 
+    heapq.heappush(openList, startNode)
+    closedList = []
+
+    while len(openList) > 0:  
+        currentNode = heapq.heappop(openList)
+        closedList.append(currentNode)
+        
+        #If we found the goal!
+        if currentNode.position == goalNode.position:
+            averageNodes.append(len(closedList))
+            return computePath(currentNode)
+        
+        neighbors = []  
+        for x in directions: 
+            node_position = (currentNode.position[0] + x[0], currentNode.position[1] + x[1])
+            if node_position[0] < 101 and node_position[0] > -1 and node_position[1] < 101 and node_position[1] > -1 and array[node_position[0]][node_position[1]] == 0: #if open square
+                newNode = Node(currentNode, node_position)
+                neighbors.append(newNode)
+            
+        for node in neighbors:
+            if len([closed_child for closed_child in closedList if closed_child == node]) > 0:
+                continue
+
+            node.g = currentNode.g + 1
+            node.heuristic = abs(node.position[0] - goalNode.position[0]) + abs(node.position[1] - goalNode.position[1]) #manhattan is usually slower in diagonal map.
+            #node.heuristic = ((node.position[0] - goalNode.position[0]) ** 2) + ((node.position[1] - goalNode.position[1]) ** 2)
+            node.f = node.g + node.heuristic
+            
+            if node in openList: 
+                idx = openList.index(node) 
+                if node.g < openList[idx].g:
+                    # update the node in the open list
+                    openList[idx].g = node.g
+                    openList[idx].f = node.f
+                    openList[idx].h = node.heuristic
+            else:
+                # Add the node to the open list
+                heapq.heappush(openList, node)
+
+    print("No path between start and end seen.")
+    averageNodes.append(len(closedList))
+    return None
+
 def main():
     levels = []
     averageNodes = []
@@ -168,7 +220,7 @@ def main():
     for i in range(50):
         x = loadSpecificLevel(levels, i)
         start_time = time.time()
-        path = forwardA(x.array, start, goal,  averageNodes)
+        path = backwardA(x.array, start, goal,  averageNodes)
         end_time = time.time()
         times.append(end_time - start_time)
 
