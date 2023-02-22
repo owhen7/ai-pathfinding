@@ -12,61 +12,43 @@ import statistics
 #Node Tiebreak value to check. Can be either 1 or 2
 TIEBREAK = 2
 
-#Breaks ties in favor of nodes with smaller G values
-if TIEBREAK == 1:
-    class Node:
+#1: Breaks ties in favor of nodes with smaller G values.
+#2: Breaks ties in favor of nodes with larger G values.
+class Node:
 
-        def __init__(self, parent=None, position=None):
-            self.parent = parent
-            self.position = position
-            
-            self.f = 0
-            self.g = 0
-            self.heuristic = 0
+    def __init__(self, parent=None, position=None):
+        self.parent = parent
+        self.position = position
+        
+        self.f = 0
+        self.g = 0
+        self.heuristic = 0
 
-        #So we can see if nodes are already in the list.
-        def __eq__(self, other):
-            return self.position == other.position
+    #So we can see if nodes are already in the list.
+    def __eq__(self, other):
+        return self.position == other.position
 
-        #for heap queue sorting. Tie breaking too.
+    if TIEBREAK == 1:
         def __lt__(self, other):
             if(self.f == other.f):
                 return self.g > other.g
             return self.f < other.f
-        
+    
         #for heap queue sorting. Tie breaking too.
         def __gt__(self, other):
             if(self.f == other.f):
                 return self.g < other.g
             return self.f > other.f
         
-#This node breaks ties in favor of nodes with larger G values.
-if TIEBREAK == 2:
-    class Node:
-
-        def __init__(self, parent=None, position=None):
-                self.parent = parent
-                self.position = position
-                
-                self.f = 0
-                self.g = 0
-                self.heuristic = 0
-
-            #So we can see if nodes are already in the list.
-        def __eq__(self, other):
-            return self.position == other.position
-
-            #for heap queue sorting. Tie breaking too.
+    if TIEBREAK == 2:
         def __lt__(self, other):
-            if(self.f == other.f):
-                return self.g < other.g
-            return self.f < other.f
-            
-        #for heap queue sorting. Tie breaking too.
+                    if(self.f == other.f):
+                        return self.g < other.g
+                    return self.f < other.f
         def __gt__(self, other):
-            if(self.f == other.f):
-                return self.g > other.g
-            return self.f > other.f
+                if(self.f == other.f):
+                    return self.g > other.g
+                return self.f > other.f
 
 def unpickle50Levels(levels):    
     with open('levels.pickle', 'rb') as file:
@@ -142,14 +124,69 @@ def forwardA(array, start, goal, averageNodes):
     averageNodes.append(len(closedList))
     return None
 
+<<<<<<< Updated upstream
 #def backwardsA(array, start, goal):
     pass
+=======
+>>>>>>> Stashed changes
 def backwardA(array, start, goal, averageNodes):
 
     startNode = Node(None, goal)
     #startNode.g = startNode.heuristic = startNode.f = 0
     goalNode = Node(None, start)
 
+<<<<<<< Updated upstream
+=======
+    directions = (0, -1), (0, 1), (-1, 0), (1, 0) #Directions we can move in.
+    openList = []
+    heapq.heapify(openList) 
+    heapq.heappush(openList, startNode)
+    closedList = []
+
+    while len(openList) > 0:  
+        currentNode = heapq.heappop(openList)
+        closedList.append(currentNode)
+        
+        #If we found the goal!
+        if currentNode.position == goalNode.position:
+            averageNodes.append(len(closedList))
+            return computePath(currentNode)
+        
+        neighbors = []  
+        for x in directions: 
+            node_position = (currentNode.position[0] + x[0], currentNode.position[1] + x[1])
+            if node_position[0] < 101 and node_position[0] > -1 and node_position[1] < 101 and node_position[1] > -1 and array[node_position[0]][node_position[1]] == 0: #if open square
+                newNode = Node(currentNode, node_position)
+                neighbors.append(newNode)
+            
+        for node in neighbors:
+            if len([closed_child for closed_child in closedList if closed_child == node]) > 0:
+                continue
+
+            node.g = currentNode.g + 1
+            node.heuristic = abs(node.position[0] - goalNode.position[0]) + abs(node.position[1] - goalNode.position[1]) #manhattan is usually slower in diagonal map.
+            #node.heuristic = ((node.position[0] - goalNode.position[0]) ** 2) + ((node.position[1] - goalNode.position[1]) ** 2)
+            node.f = node.g + node.heuristic
+            
+            if node in openList: 
+                idx = openList.index(node) 
+                if node.g < openList[idx].g:
+                    # update the node in the open list
+                    openList[idx].g = node.g
+                    openList[idx].f = node.f
+                    openList[idx].h = node.heuristic
+            else:
+                # Add the node to the open list
+                heapq.heappush(openList, node)
+
+    print("No path between start and end seen.")
+    averageNodes.append(len(closedList))
+    return None
+
+def adaptiveA(array, start, goal, averageNodes, mode, closedL):
+    startNode = Node(None,start)
+    goalNode = Node(None,goal)
+>>>>>>> Stashed changes
     directions = (0, -1), (0, 1), (-1, 0), (1, 0) #Directions we can move in.
     openList = []
     heapq.heapify(openList) 
@@ -231,6 +268,27 @@ def main():
     print(f"Standard deviation: {standard_deviation:.4f} seconds")
     print(f"Average amount of nodes visited: {average_nodes:.4f}")
     
+<<<<<<< Updated upstream
+=======
+    
+    #Can replace this testing block with forwardA, backwardA, and AdaptiveA to test them all. Runs 50 times.
+    averageNodesA = []
+    timesA = []
+    mode = 1
+    for j in range(50):
+        x = loadSpecificLevel(levels,j)
+        start_timeA = time.time()
+        path = adaptiveA(x.array, start, goal, averageNodesA, mode, [])
+        end_timeA = time.time()
+        timesA.append(end_timeA - start_timeA)
+    average_timeA = statistics.mean(timesA)
+    average_nodesA = statistics.mean(averageNodesA)
+    standard_deviationA = statistics.stdev(timesA)
+    print(f"Average time taken: {average_timeA:.4f} seconds")
+    print(f"Standard deviation: {standard_deviationA:.4f} seconds")
+    print(f"Average amount of nodes visited: {average_nodesA:.4f}")
+    
+>>>>>>> Stashed changes
     # Draw the path onto the array.
     # arrayWithPath = currentLevelSelection.array
     # if path is not None:
