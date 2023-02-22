@@ -4,13 +4,14 @@ from matplotlib import pyplot as plt
 import heapq
 import time
 import statistics
+import copy
 
 #TODO: Optimize Forward A to make it run faster.
 #TODO: Write forwardA with different tie breaking
 #TODO: Write 
 
 #Node Tiebreak value to check. Can be either 1 or 2
-TIEBREAK = 2
+TIEBREAK = 1
 
 #1: Breaks ties in favor of nodes with smaller G values.
 #2: Breaks ties in favor of nodes with larger G values.
@@ -110,12 +111,12 @@ def forwardA(array, start, goal, averageNodes):
             node.f = node.g + node.heuristic
             
             if node in openList: 
-                idx = openList.index(node) 
-                if node.g < openList[idx].g:
+                i = openList.index(node) 
+                if node.g < openList[i].g:
                     # update the node in the open list
-                    openList[idx].g = node.g
-                    openList[idx].f = node.f
-                    openList[idx].h = node.heuristic
+                    openList[i].g = node.g
+                    openList[i].f = node.f
+                    openList[i].h = node.heuristic
             else:
                 # Add the node to the open list
                 heapq.heappush(openList, node)
@@ -153,7 +154,7 @@ def backwardA(array, start, goal, averageNodes):
                 neighbors.append(newNode)
             
         for node in neighbors:
-            if len([closed_child for closed_child in closedList if closed_child == node]) > 0:
+            if len([closed_child for closed_child in closedList if closed_child == node]) > 0: #If it exists.
                 continue
 
             node.g = currentNode.g + 1
@@ -162,12 +163,12 @@ def backwardA(array, start, goal, averageNodes):
             node.f = node.g + node.heuristic
             
             if node in openList: 
-                idx = openList.index(node) 
-                if node.g < openList[idx].g:
+                i = openList.index(node) 
+                if node.g < openList[i].g:
                     # update the node in the open list
-                    openList[idx].g = node.g
-                    openList[idx].f = node.f
-                    openList[idx].h = node.heuristic
+                    openList[i].g = node.g
+                    openList[i].f = node.f
+                    openList[i].h = node.heuristic
             else:
                 # Add the node to the open list
                 heapq.heappush(openList, node)
@@ -175,6 +176,7 @@ def backwardA(array, start, goal, averageNodes):
     print("No path between start and end seen.")
     averageNodes.append(len(closedList))
     return None
+
 def adaptiveA(array, start, goal, averageNodes, mode, closedL):
     startNode = Node(None,start)
     goalNode = Node(None,goal)
@@ -217,18 +219,17 @@ def adaptiveA(array, start, goal, averageNodes, mode, closedL):
                         node.heuristic = n.heuristic
                         node.f = n.f
                         
-            
             if node not in closedL:
                 node.g = currentNode.g + 1
                 node.heuristic = abs(node.position[0] - goalNode.position[0]) + abs(node.position[1] - goalNode.position[1])
                 node.f = node.g + node.heuristic
 
             if node in openList: 
-                idx = openList.index(node) 
-                if node.g < openList[idx].g:
-                    openList[idx].g = node.g
-                    openList[idx].f = node.f
-                    openList[idx].h = node.heuristic
+                i = openList.index(node) 
+                if node.g < openList[i].g:
+                    openList[i].g = node.g
+                    openList[i].f = node.f
+                    openList[i].h = node.heuristic
             
             if node not in openList:
                 heapq.heappush(openList, node)
